@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eastside Neighborhood Guide — Family School Fit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --bg: #F8F6F1;
+    --surface: #FFFFFF;
+    --surface2: #F2EFE9;
+    --border: rgba(0,0,0,0.08);
+    --border-mid: rgba(0,0,0,0.14);
+    --text: #1C1A17;
+    --text-mid: #5C5850;
+    --text-faint: #9C9890;
+    --green: #0F6E56;
+    --green-light: #E1F5EE;
+    --purple: #534AB7;
+    --purple-light: #EEEDFE;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --teal: #1D9E75;
+    --red: #C0392B;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* HERO */
+  .hero {
+    background: var(--text);
+    color: white;
+    padding: 60px 40px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 20%;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 14px;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    color: white;
+    margin-bottom: 16px;
+    max-width: 620px;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.65);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 28px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+  .hero-stat { }
+  .hero-stat-val {
+    font-family: var(--serif);
+    font-size: 26px;
+    color: white;
+  }
+  .hero-stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 2px;
+  }
+
+  /* MAIN */
+  main { max-width: 960px; margin: 0 auto; padding: 40px 32px 80px; }
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 28px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-mid); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* SECTION HEADER */
+  .section-header { margin-bottom: 20px; }
+  .section-title { font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--text); }
+  .section-sub { font-size: 13px; color: var(--text-faint); margin-top: 4px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: box-shadow .2s;
+    cursor: pointer;
+  }
+  .card:hover { box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .card.top { border-width: 1.5px; }
+  .card-header {
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .card-left { display: flex; align-items: flex-start; gap: 12px; }
+  .rank-circle {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 500; font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .card-name { font-size: 15px; font-weight: 500; color: var(--text); }
+  .card-sub { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+  .card-hs { font-size: 11px; color: var(--text-mid); margin-top: 3px; font-style: italic; }
+  .card-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .rec-badge { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 100px; white-space: nowrap; }
+  .card-price { font-size: 13px; color: var(--text-mid); }
+  .chevron { font-size: 18px; color: var(--text-faint); transition: transform .2s; }
+  .chevron.open { transform: rotate(90deg); }
+
+  /* EXPANDED */
+  .card-body {
+    display: none;
+    padding: 0 18px 18px;
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+  }
+  .card-body.open { display: block; }
+  .scores-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .score-item { }
+  .score-label { font-size: 10px; color: var(--text-faint); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+  .score-bar-wrap { display: flex; align-items: center; gap: 6px; }
+  .score-bar-bg { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 3px; }
+  .score-val { font-size: 11px; font-weight: 500; min-width: 22px; text-align: right; }
+  .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .why-label { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 5px; }
+  .why-text { font-size: 12px; color: var(--text-mid); line-height: 1.65; }
+
+  /* CHART */
+  .chart-section { margin: 36px 0; }
+  .chart-wrap { position: relative; width: 100%; height: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+  .chart-tip {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border-mid);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+    min-width: 180px;
+    line-height: 1.6;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  }
+
+  /* DIMENSIONS */
+  .dims-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 10px; }
+  .dim-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 11px 13px;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .dim-card:hover { border-color: var(--border-mid); }
+  .dim-card.active { border-color: var(--blue); background: var(--blue-light); }
+  .dim-card.active .dim-label { color: var(--blue); }
+  .dim-label { font-size: 11px; font-weight: 500; color: var(--text-mid); margin-bottom: 2px; }
+  .dim-pct { float: right; font-size: 10px; color: var(--text-faint); }
+  .dim-preview { font-size: 10px; color: var(--text-faint); line-height: 1.4; }
+  .dim-detail {
+    display: none;
+    font-size: 12px;
+    color: var(--text-mid);
+    line-height: 1.7;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--blue);
+  }
+  .dim-detail.open { display: block; }
+
+  /* PROFILES */
+  .profiles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 36px; }
+  .profile-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+  }
+  .profile-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  .profile-name { font-family: var(--serif); font-size: 16px; color: var(--text); margin-bottom: 4px; }
+  .profile-trait { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+  .profile-target { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-faint); }
+  .profile-target strong { color: var(--text-mid); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 11px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 40px 20px 36px; }
+    main { padding: 28px 16px 60px; }
+    .scores-grid { grid-template-columns: repeat(2, 1fr); }
+    .why-grid { grid-template-columns: 1fr; }
+    .profiles { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-eyebrow">Eastside Seattle · Family School Fit Analysis</div>
+  <h1 class="hero-title">Finding home — where your kids thrive</h1>
+  <p class="hero-sub">15 neighborhoods ranked by combined fit for both children's academic profiles, college pathways, and your family's budget. Click any neighborhood to expand the full breakdown.</p>
+  <div class="hero-meta">
+    <div class="hero-stat">
+      <div class="hero-stat-val">15</div>
+      <div class="hero-stat-label">Neighborhoods evaluated</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">6</div>
+      <div class="hero-stat-label">Scoring dimensions</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">4</div>
+      <div class="hero-stat-label">School districts</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">2</div>
+      <div class="hero-stat-label">Kids, one house</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- PROFILES -->
+  <div class="section-header" style="margin-top: 8px">
+    <h2 class="section-title">Your kids' profiles</h2>
+    <p class="section-sub">Scores weight both profiles equally — one neighborhood, two futures</p>
+  </div>
+  <div class="profiles">
+    <div class="profile-card">
+      <div class="profile-icon" style="background:#EEEDFE">🔬</div>
+      <div class="profile-name">Your daughter, age 10</div>
+      <div class="profile-trait">Creative scientist — loves chemistry, art, mixing things. Wants to be a chemist. Above average in math/science/ELA but avoids math. Empathetic, enabler, extroverted. Needs structure and time-management support.</div>
+      <div class="profile-target"><strong>Target:</strong> Schools with IB arts + science integration, STEM + creative balance, supportive (not cutthroat) culture. Programs: MIT ChemE, Carnegie Mellon, Stanford d.school.</div>
+    </div>
+    <div class="profile-card">
+      <div class="profile-icon" style="background:#E1F5EE">🏗️</div>
+      <div class="profile-name">Your son, age 6</div>
+      <div class="profile-trait">Systems builder — loves LEGO, snap circuits, origami. Wants to be a builder. Way above grade level in math/science/ELA. Task-focused, competitive, introverted. Prioritizes work before play.</div>
+      <div class="profile-target"><strong>Target:</strong> Schools with robotics, strong STEM, maker culture, competitive math. Programs: MIT ME, Georgia Tech, Carnegie Mellon robotics, Purdue.</div>
+    </div>
+  </div>
+
+  <!-- RANKINGS -->
+  <div class="section-header">
+    <h2 class="section-title">Neighborhood rankings</h2>
+    <p class="section-sub">Sorted by combined family fit · top 3 expanded by default</p>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#534AB7"></div>Bellevue SD (BSD)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0F6E56"></div>Lake Washington SD (LWSD)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#BA7517"></div>Issaquah SD (ISD)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>Northshore SD (NSD)</div>
+  </div>
+
+  <div id="cards-container"></div>
+
+  <!-- CHART -->
+  <div class="chart-section">
+    <div class="section-header">
+      <h2 class="section-title">School quality vs. home price</h2>
+      <p class="section-sub">Bubble size = combined family fit score · hover for details</p>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="bubbleChart" role="img" aria-label="Bubble chart comparing school quality score to median home price for 15 Eastside Seattle neighborhoods. Redmond and Somerset sit in the upper-left sweet spot with high school quality at moderate prices.">Bubble chart: y-axis school quality (68–103), x-axis home price ($900K–$5M). Redmond (quality 93, $1.45M) and Somerset (quality 96, $1.70M) are the largest bubbles in the affordable-high-quality zone.</canvas>
+      <div class="chart-tip" id="chartTip"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text-faint)">
+      <span>← more affordable</span><span>median home price</span><span>more expensive →</span>
+    </div>
+  </div>
+
+  <!-- DIMENSIONS -->
+  <div class="section-header">
+    <h2 class="section-title">How scores are calculated</h2>
+    <p class="section-sub">Click any dimension to see the full methodology</p>
+  </div>
+  <div class="dims-grid" id="dimsGrid"></div>
+  <div class="dim-detail" id="dimDetail"></div>
+
+</main>
+
+<footer>
+  Prepared for family review · Eastside Seattle neighborhood analysis · Data from US News, SchoolDigger, Niche, GreatSchools · 2025–2026
+</footer>
+
+<script>
+const DIST_COLOR = { BSD:"#534AB7", LWSD:"#0F6E56", ISD:"#BA7517", NSD:"#185FA5" };
+
+const DATA = [
+  { name:"Redmond (Ed. Hill / Rose Hill)", sub:"98052 · Lake Washington SD", dist:"LWSD",
+    hs:"Redmond HS (#9 WA) + Tesla STEM (#1 WA, lottery admission)", price:1450, priceLabel:"$1.45M",
+    feeder:90, schoolQ:93, collegeFit:91, daughter:86, son:97, value:86,
+    rec:"Top pick", recStyle:{bg:"#E1F5EE",color:"#085041"},
+    why:"The only zone combining a guaranteed top-10 HS (Redmond HS, #9 WA) with lottery access to the #1 school in Washington (Tesla STEM). Redmond HS has rigorous STEM + solid arts electives serving both profiles. Your son's builder instincts have a direct pathway here — Tesla STEM's project-based science is ideal for your daughter's chemistry curiosity.",
+    caution:"Tesla STEM is lottery-only, not guaranteed. Budget for private options nearby (Overlake, Eastside Prep) as a backup plan." },
+
+  { name:"Somerset", sub:"98006 · Bellevue SD", dist:"BSD",
+    hs:"Newport HS (#3 WA) · full IB program · AP Capstone school", price:1700, priceLabel:"$1.70M",
+    feeder:88, schoolQ:96, collegeFit:86, daughter:88, son:86, value:80,
+    rec:"Runner-up", recStyle:{bg:"#EEEDFE",color:"#26215C"},
+    why:"Newport HS is the most consistent non-magnet feeder to top universities on the Eastside. The IB program has strong art + science integration — rare, and directly serves your daughter's creative-chemistry profile. Somerset feeds directly into Newport with no lottery. Son gets a competitive, rigorous environment that rewards task-focused achievers.",
+    caution:"Higher price than Redmond for a comparable outcome. Son's engineering ceiling is lower without a STEM magnet option." },
+
+  { name:"Bothell / North Creek", sub:"98012 · Northshore SD", dist:"NSD",
+    hs:"North Creek HS (#25 WA) · 90% dual credit · AP Capstone school", price:950, priceLabel:"$950K",
+    feeder:78, schoolQ:86, collegeFit:78, daughter:78, son:84, value:96,
+    rec:"Best value", recStyle:{bg:"#EAF3DE",color:"#173404"},
+    why:"Highest value score of any neighborhood in the dataset. North Creek HS (opened 2017) is one of the fastest-rising schools in WA. 90% dual-credit participation means both kids can graduate with real college credits already banked. Excellent for families who want strong academics without BSD price premiums.",
+    caution:"Feeder strength to elite universities (MIT, Caltech) is lower than BSD/LWSD top options. Best when supplemented with enrichment programs and Running Start at a local college." },
+
+  { name:"Woodinville", sub:"98072 · Northshore SD", dist:"NSD",
+    hs:"Woodinville HS (#16 WA) · Project Lead The Way · 4x College Success Award", price:1100, priceLabel:"$1.10M",
+    feeder:80, schoolQ:84, collegeFit:78, daughter:82, son:80, value:92,
+    rec:"Strong value", recStyle:{bg:"#E6F1FB",color:"#042C53"},
+    why:"Project Lead The Way (PLTW) curriculum directly matches your son's building/engineering instincts and your daughter's hands-on science approach. 4 consecutive College Success Awards signal institutional commitment. $350K cheaper than Somerset for a school ranked just 13 spots lower nationally.",
+    caution:"Not as strong a feeder to the very top schools (MIT, Caltech) as BSD options. Best if you're targeting Tier 2 (GT, Purdue, UW, Michigan) alongside Tier 1." },
+
+  { name:"Newport Hills", sub:"98006 · Bellevue SD", dist:"BSD",
+    hs:"Newport HS (#3 WA) · same high school as Somerset, lower entry price", price:1250, priceLabel:"$1.25M",
+    feeder:84, schoolQ:88, collegeFit:82, daughter:80, son:80, value:86,
+    rec:"Solid option", recStyle:{bg:"#F1EFE8",color:"#2C2C2A"},
+    why:"Delivers the same Newport HS outcome as Somerset at $450K less. Both kids get access to the same IB and AP Capstone programs. Good for families who want BSD quality without paying the Somerset premium.",
+    caution:"Slightly less desirable neighborhood than Somerset. Elementary and middle school feeder pipeline (Tyee Middle) is rated lower than Somerset's direct path." },
+
+  { name:"Kirkland / Juanita", sub:"98034 · Lake Washington SD", dist:"LWSD",
+    hs:"Juanita HS · Lake Washington HS · LWSD A+ district · near Eastside Prep", price:1300, priceLabel:"$1.30M",
+    feeder:78, schoolQ:86, collegeFit:76, daughter:76, son:82, value:84,
+    rec:"Solid option", recStyle:{bg:"#F1EFE8",color:"#2C2C2A"},
+    why:"Same A+ LWSD district as Redmond. Eastside Preparatory School (top private, Kirkland, 20% acceptance) is accessible. LWSD Tesla STEM lottery is available district-wide. Son's engineering profile fits the district's STEM culture well.",
+    caution:"Juanita and Lake Washington HS rank lower than Redmond HS or Newport HS. Tesla STEM lottery is highly competitive across the whole district." },
+
+  { name:"Central Bellevue", sub:"98005 · Bellevue SD", dist:"BSD",
+    hs:"Bellevue HS (#5 WA) · Interlake HS (#7 WA)", price:1400, priceLabel:"$1.40M",
+    feeder:80, schoolQ:84, collegeFit:78, daughter:76, son:78, value:78,
+    rec:"Consider", recStyle:{bg:"#F1EFE8",color:"#2C2C2A"},
+    why:"BSD schools with strong college placement. Bellevue HS and Interlake HS both crack top-10 in Washington. Solid choice if other BSD zones are priced out.",
+    caution:"No IB program at these schools. Less arts integration than Newport, which matters for your daughter's profile." },
+
+  { name:"East Bellevue", sub:"98007 · Bellevue SD", dist:"BSD",
+    hs:"Interlake HS (#7 WA) · strong robotics / FIRST team", price:1200, priceLabel:"$1.20M",
+    feeder:78, schoolQ:82, collegeFit:76, daughter:72, son:84, value:84,
+    rec:"Consider", recStyle:{bg:"#F1EFE8",color:"#2C2C2A"},
+    why:"Interlake HS has one of the strongest robotics programs on the Eastside — a meaningful advantage for your son. More affordable than central BSD zones.",
+    caution:"Lower arts integration — less ideal for your daughter's creative-science profile. IB not available." },
+
+  { name:"Woodinville (east)", sub:"98077 · Northshore SD", dist:"NSD",
+    hs:"Woodinville HS (#16 WA) · PLTW · same school as 98072", price:1000, priceLabel:"$1.00M",
+    feeder:78, schoolQ:82, collegeFit:76, daughter:80, son:78, value:92,
+    rec:"Consider", recStyle:{bg:"#F1EFE8",color:"#2C2C2A"},
+    why:"Same Woodinville HS outcome as 98072 at a slightly lower price. More rural/wooded feel. Good for families wanting space.",
+    caution:"Longer commutes. Same school limitations as main Woodinville zone." },
+
+  { name:"Issaquah Highlands", sub:"98029 · Issaquah SD", dist:"ISD",
+    hs:"Issaquah HS (#11 WA) · growing STEM programs", price:1100, priceLabel:"$1.10M",
+    feeder:74, schoolQ:80, collegeFit:72, daughter:72, son:74, value:88,
+    rec:"Consider if budget-constrained", recStyle:{bg:"#FAEEDA",color:"#412402"},
+    why:"Issaquah HS is solid at #11 in WA and the district is improving. Affordable entry point if the $1.3M+ Eastside neighborhoods are out of range.",
+    caution:"Meaningfully weaker feeder to top colleges than LWSD or BSD. Both kids' profiles are better served by the schools in the top tiers above." },
+
+  { name:"West Bellevue / Enatai", sub:"98004 · Bellevue SD", dist:"BSD",
+    hs:"Newport HS (#3 WA) + International School (#2 WA, lottery)", price:3800, priceLabel:"$3.80M",
+    feeder:90, schoolQ:98, collegeFit:88, daughter:86, son:84, value:48,
+    rec:"Premium tier", recStyle:{bg:"#FAEEDA",color:"#412402"},
+    why:"Highest school quality scores in the dataset. Access to both Newport HS and International School lottery. Best elementary feeder pipeline in the district.",
+    caution:"$3.8M median. The school outcome is excellent but not meaningfully better than Redmond or Somerset at 2–3x the price." },
+
+  { name:"Sammamish / Plateau", sub:"98075 · Issaquah SD", dist:"ISD",
+    hs:"Skyline HS (#23 WA) · Eastside Catholic (private, nearby)", price:1200, priceLabel:"$1.20M",
+    feeder:72, schoolQ:80, collegeFit:72, daughter:74, son:74, value:84,
+    rec:"Your current area", recStyle:{bg:"#FAEEDA",color:"#412402"},
+    why:"Where you currently rent. Skyline HS is solid, Eastside Catholic is a strong private option, and Cascade Ridge Elementary is top-ranked at the elementary level.",
+    caution:"Feeder strength to the very top colleges is among the lowest of any tracked neighborhood. Both kids would benefit from a move to LWSD or BSD." },
+
+  { name:"Issaquah (city)", sub:"98027 · Issaquah SD", dist:"ISD",
+    hs:"Issaquah HS (#11 WA)", price:1050, priceLabel:"$1.05M",
+    feeder:72, schoolQ:78, collegeFit:70, daughter:70, son:72, value:88,
+    rec:"Consider if budget-constrained", recStyle:{bg:"#FAEEDA",color:"#412402"},
+    why:"Most affordable tracked neighborhood alongside North Creek. Issaquah HS is a solid school improving over time.",
+    caution:"Lowest school quality and feeder scores in the dataset. Both kids' profiles point strongly toward higher-tier options if budget allows." },
+
+  { name:"Medina / Clyde Hill", sub:"98039 · Bellevue SD", dist:"BSD",
+    hs:"Newport HS (#3 WA) · highest PTA resources + peer network in BSD", price:4800, priceLabel:"$4.80M",
+    feeder:91, schoolQ:97, collegeFit:87, daughter:84, son:83, value:38,
+    rec:"Ultra premium", recStyle:{bg:"#FAEEDA",color:"#412402"},
+    why:"Unmatched PTA resources and parent network. Newport HS with the most engaged parent community in the district. The peer group and social capital are genuinely differentiated.",
+    caution:"$4.8M. The measurable school outcome does not exceed Redmond or Somerset. Premium is for address and peer network, not academic uplift." },
+
+  { name:"Bothell (south)", sub:"98011 · Northshore SD", dist:"NSD",
+    hs:"Bothell HS (#56 WA)", price:900, priceLabel:"$900K",
+    feeder:68, schoolQ:74, collegeFit:66, daughter:68, son:70, value:90,
+    rec:"Lower tier", recStyle:{bg:"#F1EFE8",color:"#2C2C2A"},
+    why:"Most affordable neighborhood in the dataset. Decent value score due to low price. Bothell HS is improving but not in the same league as other tracked schools.",
+    caution:"Lowest feeder and college-fit scores in the dataset. Hard to recommend for two academically ambitious kids with strong STEM/college aspirations." },
+];
+
+const WEIGHTS = { feeder:0.22, schoolQ:0.20, collegeFit:0.18, daughter:0.15, son:0.15, value:0.10 };
+const WSUM = Object.values(WEIGHTS).reduce((a,b)=>a+b,0);
+function calcOverall(d) {
+  return Math.round((d.feeder*WEIGHTS.feeder + d.schoolQ*WEIGHTS.schoolQ +
+    d.collegeFit*WEIGHTS.collegeFit + d.daughter*WEIGHTS.daughter +
+    d.son*WEIGHTS.son + d.value*WEIGHTS.value) / WSUM);
+}
+DATA.forEach(d => d.overall = calcOverall(d));
+DATA.sort((a,b) => b.overall - a.overall);
+
+const DIMS = [
+  { key:"feeder",     label:"Feeder strength",  pct:"22%", desc:"How consistently the zone's high school(s) send students to MIT, Stanford, Caltech, Georgia Tech, CMU, and UC Berkeley. Based on US News/Niche rankings, AP/IB participation, alumni college placement data, and known university relationships." },
+  { key:"schoolQ",    label:"School quality",   pct:"20%", desc:"Raw academic quality: state test proficiency (math + ELA), graduation rate, student-teacher ratio, dual-credit participation, GreatSchools / Niche / SchoolDigger composite scores, and district ranking." },
+  { key:"collegeFit", label:"College fit",      pct:"18%", desc:"Specific pathway fit for target colleges (MIT, Caltech, Stanford, GT, CMU). Accounts for known feeder status, robotics/STEM clubs, IB program, AP Capstone, research internship opportunities, and proximity to university enrichment programs." },
+  { key:"daughter",   label:"Daughter fit",     pct:"15%", desc:"Creative-science profile: strength of chemistry + art integration, PLTW curriculum, IB arts, supportive vs. cutthroat culture, time-management scaffolding in school culture, and opportunities for creative interdisciplinary projects." },
+  { key:"son",        label:"Son fit",          pct:"15%", desc:"Engineering/builder profile: STEM rigor, robotics teams (FIRST Robotics), maker culture, competitive math programs, proximity to university maker spaces and engineering camps, and opportunities for structured task-based achievement." },
+  { key:"value",      label:"Cost vs. quality", pct:"10%", desc:"School quality delivered per dollar of home price. Normalised ratio — higher score means more academic outcome per dollar spent on housing. Especially important for families comparing BSD premium neighborhoods against LWSD/NSD alternatives." },
+];
+
+function scoreColor(s) {
+  return s >= 90 ? "#0F6E56" : s >= 80 ? "#534AB7" : s >= 70 ? "#BA7517" : "#888";
+}
+
+function scoreBar(val, color, label) {
+  return `<div class="score-item">
+    <div class="score-label">${label}</div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-bg">
+        <div class="score-bar-fill" style="width:${val}%;background:${color}"></div>
+      </div>
+      <span class="score-val" style="color:${color}">${val}</span>
+    </div>
+  </div>`;
+}
+
+const container = document.getElementById("cards-container");
+DATA.forEach((d, i) => {
+  const c = DIST_COLOR[d.dist] || "#888";
+  const isTop = i < 3;
+  const div = document.createElement("div");
+  div.className = "card" + (isTop ? " top" : "");
+  if (isTop) div.style.borderColor = c + "60";
+
+  div.innerHTML = `
+    <div class="card-header">
+      <div class="card-left">
+        <div class="rank-circle" style="background:${c}15;color:${c}">${d.overall}</div>
+        <div>
+          <div class="card-name">#${i+1} ${d.name}</div>
+          <div class="card-sub">${d.sub}</div>
+          <div class="card-hs">${d.hs}</div>
+        </div>
+      </div>
+      <div class="card-right">
+        <span class="rec-badge" style="background:${d.recStyle.bg};color:${d.recStyle.color}">${d.rec}</span>
+        <span class="card-price">${d.priceLabel}</span>
+        <span class="chevron" id="chev_${i}">›</span>
+      </div>
+    </div>
+    <div class="card-body" id="body_${i}">
+      <div class="scores-grid">
+        ${DIMS.map(dim => scoreBar(d[dim.key], scoreColor(d[dim.key]), dim.label)).join("")}
+      </div>
+      <div class="why-grid">
+        <div>
+          <div class="why-label">Why it works for your family</div>
+          <div class="why-text">${d.why}</div>
+        </div>
+        <div>
+          <div class="why-label">Trade-offs to know</div>
+          <div class="why-text">${d.caution}</div>
+        </div>
+      </div>
+    </div>`;
+
+  div.onclick = () => {
+    const body = document.getElementById("body_" + i);
+    const chev = document.getElementById("chev_" + i);
+    const open = body.classList.toggle("open");
+    chev.classList.toggle("open", open);
+  };
+
+  container.appendChild(div);
+
+  if (isTop) {
+    setTimeout(() => {
+      document.getElementById("body_" + i).classList.add("open");
+      document.getElementById("chev_" + i).classList.add("open");
+    }, 80 + i * 40);
+  }
+});
+
+// BUBBLE CHART
+new Chart(document.getElementById("bubbleChart"), {
+  type: "bubble",
+  data: {
+    datasets: DATA.map(d => ({
+      label: d.name,
+      data: [{ x: d.price, y: d.schoolQ, r: Math.max(8, Math.round(d.overall / 7)) }],
+      backgroundColor: (DIST_COLOR[d.dist] || "#888") + "99",
+      borderColor: DIST_COLOR[d.dist] || "#888",
+      borderWidth: 1.5,
+    }))
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    layout: { padding: 24 },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: false,
+        external: (ctx) => {
+          const tip = document.getElementById("chartTip");
+          if (ctx.tooltip.opacity === 0) { tip.style.display = "none"; return; }
+          const lbl = ctx.tooltip.dataPoints?.[0]?.dataset.label;
+          const d = DATA.find(x => x.name === lbl);
+          if (!d) return;
+          tip.style.display = "block";
+          const x = Math.min(ctx.tooltip.caretX + 12, 380);
+          tip.style.left = x + "px";
+          tip.style.top = (ctx.tooltip.caretY - 20) + "px";
+          tip.innerHTML = `<strong style="color:${DIST_COLOR[d.dist]}">${d.name}</strong><br>
+            Overall score: <strong>${d.overall}</strong> &nbsp; ${d.priceLabel}<br>
+            School Q: ${d.schoolQ} &nbsp; Feeder: ${d.feeder}<br>
+            Daughter: ${d.daughter} &nbsp; Son: ${d.son}<br>
+            <span style="font-size:11px;color:#9C9890">${d.hs}</span>`;
+        }
+      }
+    },
+    scales: {
+      x: { min: 600, max: 5400,
+        ticks: { color: "#9C9890", font:{size:11}, callback: v => v>=1000?"$"+(v/1000).toFixed(1)+"M":"$"+v+"K" },
+        grid: { color: "rgba(0,0,0,.05)" },
+        title: { display:true, text:"Median home price", color:"#9C9890", font:{size:11} }
+      },
+      y: { min: 64, max: 103,
+        ticks: { color: "#9C9890", font:{size:11} },
+        grid: { color: "rgba(0,0,0,.05)" },
+        title: { display:true, text:"School quality score", color:"#9C9890", font:{size:11} }
+      }
+    }
+  }
+});
+
+// DIMENSIONS
+const dimsGrid = document.getElementById("dimsGrid");
+let activeDim = null;
+DIMS.forEach((dim, i) => {
+  const dc = document.createElement("div");
+  dc.className = "dim-card";
+  dc.innerHTML = `<div class="dim-label">${dim.label}<span class="dim-pct">${dim.pct}</span></div><div class="dim-preview">${dim.desc.slice(0,52)}…</div>`;
+  dc.onclick = () => {
+    document.querySelectorAll(".dim-card").forEach(x => x.classList.remove("active"));
+    const detail = document.getElementById("dimDetail");
+    if (activeDim === dim.key) {
+      detail.classList.remove("open");
+      activeDim = null;
+    } else {
+      dc.classList.add("active");
+      detail.classList.add("open");
+      detail.innerHTML = `<strong>${dim.label}</strong> <span style="color:var(--text-faint)">(weight: ${dim.pct} of overall score)</span><br><br>${dim.desc}`;
+      activeDim = dim.key;
+    }
+  };
+  dimsGrid.appendChild(dc);
+});
+</script>
+</body>
+</html>
